@@ -1,0 +1,2 @@
+- To start running anything in this package, you should `source .trillium_setup.sh` to set up python env. 
+- You are on the head node where running scripts has a CPU time limit. To run jobs, you will need to reserve a node. Let me know and I can do that.
