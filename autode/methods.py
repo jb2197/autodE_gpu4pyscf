@@ -7,6 +7,7 @@ from autode.wrappers.ORCA import ORCA
 from autode.wrappers.QChem import QChem
 from autode.wrappers.MOPAC import MOPAC
 from autode.wrappers.XTB import XTB
+from autode.wrappers.PySCF import PySCF
 from autode.log import logger
 from autode.config import Config
 from autode.exceptions import MethodUnavailable
@@ -21,7 +22,7 @@ DFT/WF theory calculations, low level methods are, for example, xtb and mopac
 which are fast non ab-initio methods
 """
 
-high_level_method_names = ["orca", "g09", "g16", "nwchem", "qchem"]
+high_level_method_names = ["orca", "g09", "g16", "nwchem", "qchem", "pyscf"]
 low_level_method_names = ["xtb", "mopac"]
 
 
@@ -71,7 +72,7 @@ def get_hmethod() -> "Method":
         (Method): High-level method
     """
 
-    h_methods = [ORCA(), G09(), NWChem(), G16(), QChem()]
+    h_methods = [ORCA(), G09(), NWChem(), G16(), QChem(), PySCF()]
 
     if Config.hcode is not None:
         return get_defined_method(name=Config.hcode, possibilities=h_methods)
@@ -86,7 +87,7 @@ def get_lmethod() -> "Method":
         (Method): Low-level method
     """
 
-    all_methods = [XTB(), MOPAC(), ORCA(), G16(), G09(), NWChem(), QChem()]
+    all_methods = [XTB(), MOPAC(), ORCA(), G16(), G09(), NWChem(), QChem(), PySCF()]
 
     if Config.lcode is not None:
         return get_defined_method(name=Config.lcode, possibilities=all_methods)

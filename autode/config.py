@@ -392,6 +392,30 @@ class _ConfigClass:
         # Only SMD is implemented
         implicit_solvation_type = solv.smd
 
+    class PySCF:
+        # ---------------------------------------------------------------------
+        # Parameters for PySCF                         https://pyscf.org
+        # ---------------------------------------------------------------------
+        #
+        # PySCF runs inside the Python environment; no external path needed
+        path = None
+        #
+        # Default keywords for different calculation types. Optimisation is
+        # not implemented in the PySCF wrapper, so only grad/hess/sp are set.
+        keywords = KeywordsSet(
+            low_opt=[pbe0, def2svp, d3bj],
+            grad=[pbe0, def2svp, d3bj],
+            low_sp=[pbe0, def2svp, d3bj],
+            opt=[pbe0, def2svp, d3bj],
+            opt_ts=[pbe0, def2svp, d3bj],
+            hess=[pbe0, def2svp, d3bj],
+            sp=[pbe0, def2tzvp, d3bj],
+            ecp=def2ecp,
+        )
+        #
+        # Implicit solvation via CPCM/ddCOSMO is not currently wired
+        implicit_solvation_type = solv.smd
+
     # =========================================================================
     # =============               End                        ==================
     # =========================================================================

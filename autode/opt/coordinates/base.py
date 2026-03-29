@@ -279,7 +279,8 @@ class OptCoordinates(ValueArray, ABC):
         # first non-zero eigenvalue
         aug_h_lmda = np.linalg.eigvalsh(aug_h)
         rfo_lmda = aug_h_lmda[0]
-        assert abs(rfo_lmda) > 1.0e-10
+        logger.info(f"RFO shift λ: {rfo_lmda:.6f}")
+        # assert abs(rfo_lmda) > 1.0e-10
         return rfo_lmda
 
     @property

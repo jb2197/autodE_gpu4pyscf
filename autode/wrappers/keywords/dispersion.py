@@ -6,4 +6,5 @@ d3bj = DispersionCorrection(
     g09="GD3BJ",
     orca="D3BJ",
     qchem="D3_BJ",
+    pyscf="D3BJ",
 )

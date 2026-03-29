@@ -510,6 +510,7 @@ class Keyword(ABC):
         self.orca: Optional[str] = None
         self.xtb: Optional[str] = None
         self.nwchem: Optional[str] = None
+        self.pyscf: Optional[str] = None
 
         self.doi_list = []
         if "doi" in kwargs and kwargs["doi"] is not None:

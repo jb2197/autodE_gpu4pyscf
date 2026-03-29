@@ -7,6 +7,7 @@ def2svp = BasisSet(
     g09="Def2SVP",
     nwchem="Def2-SVP",
     qchem="def2-SVP",
+    pyscf="def2-SVP",
 )
 
 def2tzvp = BasisSet(
@@ -16,6 +17,7 @@ def2tzvp = BasisSet(
     g09="Def2TZVP",
     nwchem="Def2-TZVP",
     qchem="def2-TZVP",
+    pyscf="def2-TZVP",
 )
 
 
@@ -34,6 +36,7 @@ def2ecp = ECP(
     orca="",  # def2-ECP is applied by default
     nwchem="def2-ecp",
     qchem="def2-ecp",
+    pyscf="def2-ecp",
     min_atomic_number=37,
 )  # applies to Rb and heavier
 

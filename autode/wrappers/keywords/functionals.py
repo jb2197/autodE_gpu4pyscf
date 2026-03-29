@@ -12,6 +12,7 @@ pbe0 = Functional(
     g09="PBE1PBE",
     nwchem="pbe0",
     qchem="pbe0",
+    pyscf="PBE0",
     freq_scale_factor=0.96,
 )
 
@@ -22,5 +23,6 @@ pbe = Functional(
     g09="PBEPBE",
     nwchem="xpbe96 cpbe96",
     qchem="pbe",
+    pyscf="PBE",
     freq_scale_factor=0.99,
 )
