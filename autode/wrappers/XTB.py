@@ -129,6 +129,12 @@ class XTB(autode.wrappers.methods.ExternalMethodOEG):
                     f"$end",
                     file=xcontrol_file,
                 )
+            print(
+                f"$scc\n"
+                f"broydamp=0.5\n"
+                f"$",
+                file=xcontrol_file,
+            )
 
         calc.input.additional_filenames.append(xcontrol_filename)
         return
