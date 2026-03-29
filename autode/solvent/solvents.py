@@ -106,6 +106,7 @@ class Solvent(ABC):
         self.orca: Optional[str] = None
         self.xtb: Optional[str] = None
         self.nwchem: Optional[str] = None
+        self.pyscf: Optional[str] = kwargs.get("pyscf", self.name)
         # Add attributes for all the methods specified e.g. initialisation with
         # orca='water' -> self.orca = 'water'
         self.__dict__.update(kwargs)

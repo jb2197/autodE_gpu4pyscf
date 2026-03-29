@@ -19,12 +19,15 @@ from autode.exceptions import (
 
 # pyscf imports
 from pyscf import gto, scf, dft
+
 has_gpu4pyscf = False
 try:
     import gpu4pyscf
+    import cupy as cp
+
     has_gpu4pyscf = True
 except ImportError:
-    pass
+    cp = None
 
 if TYPE_CHECKING:
     from autode.calculations.executors import CalculationExecutor
@@ -44,10 +47,11 @@ class PySCF(autode.wrappers.methods.Method):
         doi_list = ["10.1039/C6CP41100A"]
         implicit = pyscf_conf.implicit_solvation_type if pyscf_conf else None
         super().__init__(
-            name="PySCF",
+            name="pyscf",
             keywords_set=keywords,
             doi_list=doi_list,
         )
+        self.implicit_solvation_type = implicit or kws.cpcm
 
     def __repr__(self):
         return f"PySCF(available = {self.is_available})"
@@ -91,9 +95,6 @@ class PySCF(autode.wrappers.methods.Method):
         if calc.input.point_charges is not None:
             raise UnsupportedCalculationInput("Point charges not supported in this PySCF wrapper")
 
-        # if molecule.is_implicitly_solvated:
-        #     raise UnsupportedCalculationInput("Implicit solvent not supported in this PySCF wrapper")
-
         jobtype = self._jobtype_for(calc.input.keywords)
         basis = self._basis_for(calc.input.keywords)
         xc = self._functional_for(calc.input.keywords)
@@ -126,10 +127,6 @@ class PySCF(autode.wrappers.methods.Method):
             else:
                 mf = scf.UHF(mol)
         mf.verbose = 0
-        
-        if has_gpu4pyscf:
-            logger.info('moving to gpu')
-            mf = mf.to_gpu()
 
         # Apply empirical dispersion correction if requested and supported
         if disp is not None:
@@ -138,13 +135,20 @@ class PySCF(autode.wrappers.methods.Method):
                 mf.disp = disp
                 logger.info(f"Applying empirical dispersion correction: {disp}")
             except Exception as e:
-                logger.warning(f"Failed to apply dispersion '{disp}': {e}. Proceeding without dispersion")
-        
+                logger.warning(
+                    f"Failed to apply dispersion '{disp}': {e}. "
+                    f"Proceeding without dispersion"
+                )
+
+        if has_gpu4pyscf:
+            logger.info("moving to gpu")
+            mf = mf.to_gpu()
+            logger.info("applying density fitting for GPU job")
+            mf = mf.density_fit()
+
         if molecule.is_implicitly_solvated:
-            from pyscf import solvent
-
-            mf = solvent.CPCM(mf, epsilon=molecule.solvent.epsilon)
-
+            mf = mf.PCM()
+            mf.with_solvent.eps = molecule.solvent.dielectric
 
         E = mf.kernel()
 
@@ -153,21 +157,31 @@ class PySCF(autode.wrappers.methods.Method):
         calc.molecule.energy = PotentialEnergy(cache["energy"], units="Ha")
 
         if jobtype == "force":
-            g = mf.nuc_grad_method().kernel()
+            g_obj = mf.Gradients()
+            g = g_obj.kernel()
+
+            if cp is not None and isinstance(g, cp.ndarray):
+                g = cp.asnumpy(g)
+
             cache["gradient"] = np.asarray(g, dtype=np.float64)
-            calc.molecule.gradient = Gradient(cache["gradient"], units="Ha a0^-1").to("Ha Å^-1")
+            calc.molecule.gradient = Gradient(
+                cache["gradient"], units="Ha a0^-1"
+            ).to("Ha Å^-1")
 
         elif jobtype == "freq":
             try:
-                H_arr: np.ndarray = mf.Hessian().kernel()
+                H_obj = mf.Hessian()
+                H_arr = H_obj.kernel()
             except Exception as e:
                 print(f"Error computing Hessian with PySCF: {e}")
                 raise CouldNotGetProperty("Hessian") from e
+
+            if cp is not None and isinstance(H_arr, cp.ndarray):
+                H_arr = cp.asnumpy(H_arr)
+
             n_atoms = calc.molecule.n_atoms
             H_arr = np.asarray(H_arr, dtype=np.float64)
-            # import einops
-            # H_arr = H_arr.reshape((3 * n_atoms, 3 * n_atoms))
-            # Rearrange from (n_atoms, n_atoms, 3, 3) to (3*n_atoms, 3*n_atoms) without einops
+            # Rearrange from (n_atoms, n_atoms, 3, 3) to (3*n_atoms, 3*n_atoms)
             H_arr = H_arr.transpose(0, 2, 1, 3).reshape(3 * n_atoms, 3 * n_atoms)
 
             cache["hessian"] = H_arr
